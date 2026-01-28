@@ -1,0 +1,8 @@
+{
+  "name": "Sankara Smart Attendance System",
+  "description": "A high-security, automated attendance management system featuring QR validation, OTP verification, and campus-wide geofencing for Sankara College.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
