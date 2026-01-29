@@ -1,8 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export async function getAttendanceInsights(attendanceData: any) {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
