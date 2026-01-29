@@ -5,25 +5,24 @@ const supabaseUrl = 'https://pgwulrcoukiqikgxrjuv.supabase.co';
 
 /**
  * Retrieves the Supabase Anon Key.
- * Priority: Environment Variable > Local Storage > Hardcoded Default
  */
 export const getSupabaseKey = (): string => {
-  return (
-    process.env.SUPABASE_ANON_KEY || 
-    localStorage.getItem('SANKARA_SUPABASE_KEY') || 
-    'sb_publishable_N9N8RAp0eHf3VFD_ma75lw_EQZARkGW'
-  );
+  // Use a string literal for the environment variable to ensure it's replaced by Vite
+  const envKey = process.env.SUPABASE_ANON_KEY;
+  const localKey = localStorage.getItem('SANKARA_SUPABASE_KEY');
+  const fallbackKey = 'sb_publishable_N9N8RAp0eHf3VFD_ma75lw_EQZARkGW';
+  
+  return envKey || localKey || fallbackKey;
 };
 
 let supabaseInstance: SupabaseClient | null = null;
 
 /**
  * Lazily initializes and returns the Supabase client.
- * Returns null if the key is missing instead of crashing.
  */
 export const getSupabaseClient = (): SupabaseClient | null => {
   const key = getSupabaseKey();
-  if (!supabaseUrl || !key) {
+  if (!supabaseUrl || !key || key.length < 10) {
     return null;
   }
   
@@ -41,13 +40,16 @@ export const getSupabaseClient = (): SupabaseClient | null => {
 
 /**
  * Proxy object for the Supabase client.
- * Methods will throw a specific error if called before the client is ready.
  */
 export const supabase = new Proxy({} as SupabaseClient, {
   get(target, prop) {
     const client = getSupabaseClient();
     if (!client) {
-      throw new Error("SUPABASE_CLIENT_NOT_INITIALIZED");
+      // Return a dummy object with dummy methods to prevent crash before config
+      return () => ({
+        select: () => ({ maybeSingle: () => ({ data: null, error: null }), eq: () => ({ maybeSingle: () => ({ data: null, error: null }) }) }),
+        from: () => ({ select: () => ({ eq: () => ({ maybeSingle: () => ({ data: null, error: null }) }), maybeSingle: () => ({ data: null, error: null }) }), insert: () => ({}), update: () => ({ eq: () => ({}) }), delete: () => ({ eq: () => ({}) }) })
+      });
     }
     return (client as any)[prop];
   }
