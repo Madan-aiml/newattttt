@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -37,7 +36,8 @@ export async function getAttendanceInsights(attendanceData: any) {
       }
     });
 
-    return JSON.parse(response.text);
+    const text = response.text || '{}';
+    return JSON.parse(text);
   } catch (error) {
     console.error("Gemini Insight Error:", error);
     return {

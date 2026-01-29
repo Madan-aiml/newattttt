@@ -98,7 +98,7 @@ export const attendanceService = {
       try {
         await supabase.from('faculty_registry').insert([{
           id: user.id, name: user.name, email: user.email, role: user.role,
-          department: user.department, faculty_id: user.facultyId, is_approved: false
+          department: user.department || 'Academic Faculty', faculty_id: user.facultyId || user.id, is_approved: false
         }]);
       } catch (e) { console.error(e); }
     }
@@ -272,7 +272,6 @@ export const attendanceService = {
   markPresent: async (record: AttendanceRecord) => {
     if (isClientReady()) {
       try {
-        // Fix: Changed record.qr_verified to record.qrVerified to match the AttendanceRecord interface
         await supabase.from('attendance_records').insert([{
           id: record.id, student_id: record.studentId, student_name: record.studentName,
           session_id: record.sessionId, timestamp: record.timestamp, status: record.status,
