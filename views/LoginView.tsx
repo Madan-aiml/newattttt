@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
 import { attendanceService } from '../services/attendanceService';
@@ -16,10 +17,24 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [pendingApproval, setPendingApproval] = useState(false);
 
+  const checkTimeWindow = () => {
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const start = 8 * 60 + 30; // 8:30 AM
+    const end = 15 * 60 + 45; // 3:45 PM
+    return currentTime >= start && currentTime <= end;
+  };
+
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    if (portal === 'STUDENT' && !checkTimeWindow()) {
+        setError('PORTAL OFFLINE: OPERATIONAL ONLY 08:30 AM - 03:45 PM');
+        setLoading(false);
+        return;
+    }
 
     // ADMIN PORTAL LOGIC
     if (portal === 'ADMIN') {
@@ -50,7 +65,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
 
     const namePart = emailLower.split('@')[0];
     
-    // Use async callback for setTimeout to handle await operations
     setTimeout(async () => {
       if (portal === 'FACULTY') {
         const userObj: User = {
@@ -62,10 +76,8 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
           facultyId: 'FAC_' + namePart.toUpperCase(),
         };
 
-        // Await the asynchronous faculty verification from database
         const existingFaculty = await attendanceService.getFacultyByEmail(emailLower);
         if (!existingFaculty || !existingFaculty.isApproved) {
-          // If not found in registry, submit a registration request
           if (!existingFaculty) await attendanceService.registerFacultyRequest(userObj);
           setPendingApproval(true);
           setLoading(false);
@@ -73,7 +85,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
           onLogin(existingFaculty);
         }
       } else if (portal === 'STUDENT') {
-        // Time restriction removed for development as requested
         onLogin({
           id: 'S_' + Math.floor(Math.random() * 1000),
           name: namePart.charAt(0).toUpperCase() + namePart.slice(1),
@@ -123,7 +134,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
             </div>
             <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">STUDENT</h3>
             <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Mark Presence & Progress</p>
-            <p className="text-sky-400/50 text-[7px] font-black uppercase mt-4 tracking-widest">Shift restrictions temporarily suspended</p>
+            <p className="text-sky-400/50 text-[7px] font-black uppercase mt-4 tracking-widest">Active: 08:30 - 03:45 ONLY</p>
           </button>
 
           <button onClick={() => setPortal('FACULTY')} className="group glass-panel rounded-[3rem] p-12 text-center border-2 border-white/5 hover:border-amber-400/40 transition-all duration-500 relative overflow-hidden">
